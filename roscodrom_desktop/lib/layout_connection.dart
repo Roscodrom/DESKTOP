@@ -19,7 +19,7 @@ class ConnectionScreenState extends State<ConnectionScreen> {
           title: const Text('Connect to server'),
         ),
         body: Center(
-          child: Container(
+          child: SizedBox(
             width: 200,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
