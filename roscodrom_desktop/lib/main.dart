@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'app_data.dart';
-import 'layout_connection.dart'; // Import the connection screen
+import 'layout_language_selector.dart';
 
 void main() {
   runApp(
@@ -13,7 +13,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: ConnectionScreen(),
+      home: const LanguageSelector(),
       debugShowCheckedModeBanner: false,
     );
   }
