@@ -6,4 +6,10 @@ class AppData with ChangeNotifier {
   // AppData appData = Provider.of<AppData>(context, listen: false)
   List<String> languageWords = [];
   String currentLanguage = "";
+
+  @override
+  void notifyListeners() {
+    // TODO: implement notifyListeners
+    super.notifyListeners();
+  }
 }
