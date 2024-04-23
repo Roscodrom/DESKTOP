@@ -6,6 +6,14 @@ class AppData with ChangeNotifier {
   // AppData appData = Provider.of<AppData>(context, listen: false)
   List<String> languageWords = [];
   String currentLanguage = "";
+  bool _isLoading = false;
+
+  bool get isLoading => _isLoading;
+
+  set isLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
 
   @override
   void notifyListeners() {

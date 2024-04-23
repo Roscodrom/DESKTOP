@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'app_data.dart';
@@ -18,8 +16,15 @@ class WordDisplayState extends State<WordDisplay> {
   late Future<Map<String, dynamic>> jsonResponse;
   final TextEditingController _pageController = TextEditingController();
   int _currentPage = 1;
-  final _itemsPerPage =
-      13; // Change this to the number of items you want per page
+  final _itemsPerPage = 13;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      Provider.of<AppData>(context, listen: false).isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +33,13 @@ class WordDisplayState extends State<WordDisplay> {
         appBar: AppBar(
           title: Text(
               '${appData.currentLanguage[0].toUpperCase()}${appData.currentLanguage.substring(1)} dictionary'),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+              Provider.of<AppData>(context, listen: false).isLoading = false;
+            },
+          ),
         ),
         body: Stack(children: <Widget>[
           Column(
@@ -45,8 +57,12 @@ class WordDisplayState extends State<WordDisplay> {
                         .split('')
                         .map((String letter) {
                       return TextButton(
-                        child: Text(letter, style: TextStyle(fontSize: 12)),
+                        child:
+                            Text(letter, style: const TextStyle(fontSize: 12)),
                         onPressed: () {
+                          setState(() {
+                            appData.isLoading = true;
+                          });
                           jsonResponse = fetchWordsByLetter(
                               appData.currentLanguage, letter);
                           words = jsonResponse.then((jsonResponse) {
@@ -63,26 +79,38 @@ class WordDisplayState extends State<WordDisplay> {
                                 newWords.add(word.word);
                               }
                               appData.languageWords = newWords;
+                              appData.isLoading = false;
                             });
                           });
                         },
                       );
                     }).toList()),
               )),
+              SizedBox(height: 48),
               Expanded(
-                child: ListView.builder(
-                  itemCount: _itemsPerPage - 1,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Center(
-                          child: Text(appData.languageWords[index]),
-                        ),
+                child: appData.isLoading
+                    ? const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(),
+                          Text('Loading words...',
+                              style: TextStyle(fontSize: 16)),
+                        ],
+                      )
+                    : ListView.builder(
+                        itemCount: _itemsPerPage - 1,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Center(
+                                child: Text(appData.languageWords[index]),
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ],
           ),
@@ -103,6 +131,7 @@ class WordDisplayState extends State<WordDisplay> {
                           keyboardType: TextInputType.number,
                           onSubmitted: (value) {
                             setState(() {
+                              appData.isLoading = true;
                               _currentPage = int.parse(value);
                               words = fetchWords(
                                   appData.currentLanguage, _currentPage);
@@ -113,6 +142,9 @@ class WordDisplayState extends State<WordDisplay> {
                                     newWords.add(word.word);
                                   }
                                   appData.languageWords = newWords;
+                                  if (appData.languageWords.isNotEmpty) {
+                                    appData.isLoading = false;
+                                  }
                                 });
                               });
                             });
@@ -125,15 +157,16 @@ class WordDisplayState extends State<WordDisplay> {
           )
         ]),
         bottomNavigationBar: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.only(bottom: 10.0),
+              padding: const EdgeInsets.only(right: 64, bottom: 10.0),
               child: ElevatedButton(
-                child: Text('Prev'),
+                child: const Text('Prev'),
                 onPressed: _currentPage > 1
                     ? () {
                         setState(() {
+                          appData.isLoading = true;
                           words = fetchWords(
                               appData.currentLanguage, _currentPage - 1);
                           words.then((wordList) {
@@ -145,6 +178,7 @@ class WordDisplayState extends State<WordDisplay> {
                               appData.languageWords = newWords;
                               if (appData.languageWords.isNotEmpty) {
                                 _currentPage--;
+                                appData.isLoading = false;
                               }
                             });
                           });
@@ -155,10 +189,13 @@ class WordDisplayState extends State<WordDisplay> {
             ),
             Text('Page $_currentPage'),
             Padding(
-              padding: const EdgeInsets.only(bottom: 10.0),
+              padding: const EdgeInsets.only(left: 64, bottom: 10.0),
               child: ElevatedButton(
                 child: Text('Next'),
                 onPressed: () {
+                  setState(() {
+                    appData.isLoading = true;
+                  });
                   words = fetchWords(appData.currentLanguage, _currentPage + 1);
                   words.then((wordList) {
                     setState(() {
@@ -169,6 +206,7 @@ class WordDisplayState extends State<WordDisplay> {
                       appData.languageWords = newWords;
                       if (appData.languageWords.isNotEmpty) {
                         _currentPage++;
+                        appData.isLoading = false;
                       }
                     });
                   });
