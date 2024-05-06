@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'app_data.dart';
-import 'layout_language_selector.dart';
+import 'layout_main_menu.dart';
 
 void main() {
   runApp(
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const LanguageSelector(),
+      home: LayoutMainMenu(),
       debugShowCheckedModeBanner: false,
     );
   }
