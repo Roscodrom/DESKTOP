@@ -23,7 +23,6 @@ class _LayoutSpectateState extends State<LayoutSpectate> {
 
     socketService.channel.stream.listen((message) {
       var decodedMessage = jsonDecode(message);
-      print(decodedMessage);
       if (decodedMessage['data'] is Map<String, dynamic> &&
           decodedMessage['data'].containsKey('connection') &&
           decodedMessage['data']['connection'] == 201 &&
