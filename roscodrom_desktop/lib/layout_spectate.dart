@@ -13,6 +13,7 @@ class LayoutSpectate extends StatefulWidget {
 class _LayoutSpectateState extends State<LayoutSpectate> {
   String _status = 'Disconnected';
   String _message = '';
+  List<dynamic> _players = [];
   final socketService = SocketService();
 
   @override
@@ -22,7 +23,11 @@ class _LayoutSpectateState extends State<LayoutSpectate> {
 
     socketService.channel.stream.listen((message) {
       var decodedMessage = jsonDecode(message);
-      if (decodedMessage['data']['connection'] == 201) {
+      print(decodedMessage);
+      if (decodedMessage['data'] is Map<String, dynamic> &&
+          decodedMessage['data'].containsKey('connection') &&
+          decodedMessage['data']['connection'] == 201 &&
+          _status != 'Connected') {
         var encodeMessage = jsonEncode({
           'type': 'HANDSHAKE',
           'data': {'client': 'flutter'}
@@ -30,6 +35,23 @@ class _LayoutSpectateState extends State<LayoutSpectate> {
         socketService.channel.sink.add(encodeMessage);
         setState(() {
           _status = 'Connected';
+        });
+      }
+      if (decodedMessage['type'] == 'GAME_INFO') {
+        setState(() {
+          for (var player in decodedMessage['data']['message']) {
+            if (!_players.contains(player)) {
+              _players.add(player);
+            } else {
+              _players[player]['points'] = player['points'];
+            }
+          }
+        });
+      }
+      if (decodedMessage['type'] == 'TIEMPO_PARA_INICIO' &&
+          decodedMessage['data']['enPartida'] == false) {
+        setState(() {
+          _players = [];
         });
       }
     }, onDone: () {
@@ -43,7 +65,7 @@ class _LayoutSpectateState extends State<LayoutSpectate> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Socket.IO Client'),
+        title: Text('Spectate'),
       ),
       body: Center(
         child: Column(
@@ -52,6 +74,13 @@ class _LayoutSpectateState extends State<LayoutSpectate> {
             Text('Connection Status: $_status'),
             SizedBox(height: 20),
             Text(_message),
+            if (_players.isNotEmpty)
+              Column(
+                children: _players
+                    .map((player) => Text(
+                        'Player: ${player['nickname']} - Score: ${player['points']}'))
+                    .toList(),
+              ),
           ],
         ),
       ),
@@ -60,7 +89,7 @@ class _LayoutSpectateState extends State<LayoutSpectate> {
 }
 
 class SocketService {
-  final wsUrl = Uri.parse('ws://192.168.18.148:80');
+  final wsUrl = Uri.parse('ws://roscodrom2.ieti.site');
   late WebSocketChannel channel;
 
   Future<void> connectSocket() async {
